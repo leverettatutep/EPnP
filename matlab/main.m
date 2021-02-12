@@ -31,8 +31,11 @@ fprintf('\n---------EPnP--------------\n');
 %1.-Generate simulated input data------------------------------------------
 load_points=0;
 if ~load_points
+    %Randomly chooses world points, random camera location, computes image
+    %locations of the world points, adds noise to the image values LJE
     n=50; %number of points
     std_noise=10; %noise in the measurements (in pixels)
+    std_noise = 0;
     [A,point,Rt]=generate_noisy_input_data(n,std_noise);
     save('data\input_data_noise.mat','A','point','Rt');
 else
@@ -40,11 +43,17 @@ else
     n=size(point,2);
     draw_noisy_input_data(point);
 end
-
-%2.-Inputs format--------------------------------
-x3d=zeros(n,4);
-x2d=zeros(n,3); 
+scale = 10000;
+fileID = fopen('uv.csv','w');
+for i=1:50
+    fprintf(fileID,'%d, %d\r\n',round(point(i).Ximg_pix_true*scale,0));
+end
+fclose(fileID);
+%% 2.-Inputs format--------------------------------
+% x3d=zeros(n,4);
+% x2d=zeros(n,3); 
 A=A(:,1:3);
+%Attaching a 1 at the end of points
 for i=1:n
     x3d_h(i,:)=[point(i).Xworld',1]; 
     x2d_h(i,:)=[point(i).Ximg(1:2)',1];
@@ -54,13 +63,33 @@ for i=1:n
     X3d_cam(i,:)=point(i).Xcam';
 end
 
-
-%3.-EPnP----------------------------------------------------
+%% 3.-EPnP----------------------------------------------------
 Xw=x3d_h(:,1:3);
 U=x2d_h(:,1:2);
 
-[Rp,Tp,Xc,sol]=efficient_pnp(x3d_h,x2d_h,A);
+[Rp,Tp,Xc,sol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A);
 
+fileID = fopen('alpha.csv','w');
+for i=1:50
+    fprintf(fileID,'%d, %d, %d, %d\r\n',round(scale * alphas(i,:),0));
+end
+fclose(fileID);
+
+fileID = fopen('cw.csv','w');
+for i=1:4
+    fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cw(i,:),0));
+end
+fclose(fileID);
+
+fileID = fopen('cc.csv','w');
+for i=1:4
+    fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cc(i,:),0));
+end
+fclose(fileID);
+
+A2 = A(1:2,:);
+u2 = x2d_h(:,1:2)';
+% jacobian(u2,A2,alphas);
 %draw Results
 for i=1:n
     point(i).Xcam_est=Xc(i,:)';
