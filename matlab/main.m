@@ -25,8 +25,8 @@ clear all; close all;
 addpath data;
 addpath error;
 addpath EPnP;
-
-
+OlympicYear(1980.9)
+round(
 fprintf('\n---------EPnP--------------\n');
 %1.-Generate simulated input data------------------------------------------
 load_points=0;
@@ -122,5 +122,22 @@ fprintf('error EPnP_Gauss_Newton: %.3f\n',error);
 xlim([-2 2]); ylim([-2 2]);
 
 
+function yesNo = OlympicYear(year)
+    %Not expecting students to know how to round down
+    yearInt = round(year,0); %Round to integer
+    if yearInt > year
+        yearInt = yearInt - 1;
+    end
+    yesNo = 'true';
+    if yearInt < 1948
+        yesNo = 'false';
+    end
+    if yearInt > 2019
+        yesNo = 'false';
+    end
+    if mod(yearInt , 4)
+        yesNo = 'false';
+    end
+end
 
 
