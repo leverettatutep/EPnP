@@ -20,6 +20,7 @@ Cw=[1 0 0;
     0 1 0;
     0 0 1;
     0 0 0];
+%LJE testing to see impact of other values of Cw
 % Cw=[1 0 0;
 %     0 1 0;
 %     0 0 1;

@@ -5,6 +5,7 @@ end
 
 
 function dc = dcdxyzj(xyz,j)
+%This function computes the dCwrt the x y or z for Cj
     dc = zeros(3,4);
     dc(xyz,j) = 1;
 end

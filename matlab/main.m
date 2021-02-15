@@ -25,8 +25,8 @@ clear all; close all;
 addpath data;
 addpath error;
 addpath EPnP;
-OlympicYear(1980.9)
-round(
+
+
 fprintf('\n---------EPnP--------------\n');
 %1.-Generate simulated input data------------------------------------------
 load_points=0;
@@ -35,7 +35,7 @@ if ~load_points
     %locations of the world points, adds noise to the image values LJE
     n=50; %number of points
     std_noise=10; %noise in the measurements (in pixels)
-    std_noise = 0;
+    std_noise = 0; %LJE
     [A,point,Rt]=generate_noisy_input_data(n,std_noise);
     save('data\input_data_noise.mat','A','point','Rt');
 else
@@ -43,17 +43,20 @@ else
     n=size(point,2);
     draw_noisy_input_data(point);
 end
+%LJE used to input data to mathematica
 scale = 10000;
 fileID = fopen('uv.csv','w');
 for i=1:50
     fprintf(fileID,'%d, %d\r\n',round(point(i).Ximg_pix_true*scale,0));
 end
 fclose(fileID);
+%LJE end
+%LJE noticed the following are not used
 %% 2.-Inputs format--------------------------------
 % x3d=zeros(n,4);
 % x2d=zeros(n,3); 
 A=A(:,1:3);
-%Attaching a 1 at the end of points
+%LJE Attaching a 1 at the end of points
 for i=1:n
     x3d_h(i,:)=[point(i).Xworld',1]; 
     x2d_h(i,:)=[point(i).Ximg(1:2)',1];
@@ -67,8 +70,10 @@ end
 Xw=x3d_h(:,1:3);
 U=x2d_h(:,1:2);
 
+%LJE added extra outputs making them available to mathematica
 [Rp,Tp,Xc,sol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A);
 
+%LJE writing data to mathematica
 fileID = fopen('alpha.csv','w');
 for i=1:50
     fprintf(fileID,'%d, %d, %d, %d\r\n',round(scale * alphas(i,:),0));
@@ -87,8 +92,9 @@ for i=1:4
 end
 fclose(fileID);
 
-A2 = A(1:2,:);
-u2 = x2d_h(:,1:2)';
+%LJE Adding the error minimization solution
+%A2 = A(1:2,:);
+%u2 = x2d_h(:,1:2)';
 % jacobian(u2,A2,alphas);
 %draw Results
 for i=1:n
@@ -122,22 +128,5 @@ fprintf('error EPnP_Gauss_Newton: %.3f\n',error);
 xlim([-2 2]); ylim([-2 2]);
 
 
-function yesNo = OlympicYear(year)
-    %Not expecting students to know how to round down
-    yearInt = round(year,0); %Round to integer
-    if yearInt > year
-        yearInt = yearInt - 1;
-    end
-    yesNo = 'true';
-    if yearInt < 1948
-        yesNo = 'false';
-    end
-    if yearInt > 2019
-        yesNo = 'false';
-    end
-    if mod(yearInt , 4)
-        yesNo = 'false';
-    end
-end
 
 

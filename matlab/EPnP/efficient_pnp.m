@@ -1,5 +1,5 @@
 function [R,T,Xc,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A)
-
+%LJE added extra outputs to use in mathematica
 % EFFICIENT_PNP Main Function to solve the PnP problem 
 %       as described in:
 %
@@ -40,7 +40,6 @@ THRESHOLD_REPROJECTION_ERROR=20;%error in degrees of the basis formed by the con
 
 %define control points in a world coordinate system (centered on the 3d
 %points centroid)
-%% 4 points at unit locations
 Cw=define_control_points();
 
 %compute alphas (linear combination of the control points to represent the 3d
