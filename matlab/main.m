@@ -35,7 +35,7 @@ if ~load_points
     %locations of the world points, adds noise to the image values LJE
     n=50; %number of points
     std_noise=10; %noise in the measurements (in pixels)
-    std_noise = 0; %LJE
+%     std_noise = 0; %LJE
     [A,point,Rt]=generate_noisy_input_data(n,std_noise);
     save('data\input_data_noise.mat','A','point','Rt');
 else
@@ -43,14 +43,14 @@ else
     n=size(point,2);
     draw_noisy_input_data(point);
 end
-%LJE used to input data to mathematica
-scale = 10000;
-fileID = fopen('uv.csv','w');
-for i=1:50
-    fprintf(fileID,'%d, %d\r\n',round(point(i).Ximg_pix_true*scale,0));
-end
-fclose(fileID);
-%LJE end
+% %LJE used to input data to mathematica
+% scale = 10000;
+% fileID = fopen('uv.csv','w');
+% for i=1:50
+%     fprintf(fileID,'%d, %d\r\n',round(point(i).Ximg_pix_true*scale,0));
+% end
+% fclose(fileID);
+% %LJE end
 %LJE noticed the following are not used
 %% 2.-Inputs format--------------------------------
 % x3d=zeros(n,4);
@@ -73,29 +73,25 @@ U=x2d_h(:,1:2);
 %LJE added extra outputs making them available to mathematica
 [Rp,Tp,Xc,sol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A);
 
-%LJE writing data to mathematica
-fileID = fopen('alpha.csv','w');
-for i=1:50
-    fprintf(fileID,'%d, %d, %d, %d\r\n',round(scale * alphas(i,:),0));
-end
-fclose(fileID);
+% %LJE writing data to mathematica
+% fileID = fopen('alpha.csv','w');
+% for i=1:50
+%     fprintf(fileID,'%d, %d, %d, %d\r\n',round(scale * alphas(i,:),0));
+% end
+% fclose(fileID);
 
-fileID = fopen('cw.csv','w');
-for i=1:4
-    fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cw(i,:),0));
-end
-fclose(fileID);
+% fileID = fopen('cw.csv','w');
+% for i=1:4
+%     fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cw(i,:),0));
+% end
+% fclose(fileID);
+% 
+% fileID = fopen('cc.csv','w');
+% for i=1:4
+%     fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cc(i,:),0));
+% end
+% fclose(fileID);
 
-fileID = fopen('cc.csv','w');
-for i=1:4
-    fprintf(fileID,'%d, %d, %d\r\n',round(scale * Cc(i,:),0));
-end
-fclose(fileID);
-
-%LJE Adding the error minimization solution
-%A2 = A(1:2,:);
-%u2 = x2d_h(:,1:2)';
-% jacobian(u2,A2,alphas);
 %draw Results
 for i=1:n
     point(i).Xcam_est=Xc(i,:)';

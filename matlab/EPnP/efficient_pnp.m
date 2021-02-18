@@ -41,6 +41,7 @@ THRESHOLD_REPROJECTION_ERROR=20;%error in degrees of the basis formed by the con
 %define control points in a world coordinate system (centered on the 3d
 %points centroid)
 Cw=define_control_points();
+%The Cw are arbitrarily chosen
 
 %compute alphas (linear combination of the control points to represent the 3d
 %points)
@@ -48,16 +49,22 @@ Alph=compute_alphas(Xw,Cw);
 
 %Compute M
 M=compute_M_ver2(U,Alph,A);
+Cce=findError(A,Alph,U); %LJE
 
 %Compute kernel M
 Km=kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
-    
+%[allK, Se] = eigs(Me);
+%Kme = allK(:,1);
 
 
 %1.-Solve assuming dim(ker(M))=1. X=[Km_end];------------------------------
 dim_kerM=1;
 X1=Km(:,end);
-[Cc,Xc]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
+[Cc,Xc,scale]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
+scale1 = Cc(1,1)/Cce(1,1)
+scale =FindDistances(Cce,Cw)
+Cce = Cce * scale;
+Cc - Cce
 
 [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
 err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
