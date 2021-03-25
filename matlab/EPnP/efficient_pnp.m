@@ -61,10 +61,16 @@ Km=kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
 dim_kerM=1;
 X1=Km(:,end);
 [Cc,Xc,scale]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
-scale1 = Cc(1,1)/Cce(1,1)
-scale =FindDistances(Cce,Cw)
+%This scale is dividing his first element by mine.
+scale1 = Cc(1,1)/Cce(1,1);
+Cceh = Cce * scale1;
+%Using this scale makes our solutions match exactly.
+Cc - Cceh;
+%Using this scale makes our solutions differ slightly. Not sure who's is
+%better.
+scale =FindDistances(Cce,Cw);
 Cce = Cce * scale;
-Cc - Cce
+Cc - Cce;
 
 [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
 err(1)=reprojection_error_usingRT(Xw,U,R,T,A);

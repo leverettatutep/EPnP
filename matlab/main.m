@@ -29,11 +29,12 @@ addpath EPnP;
 
 fprintf('\n---------EPnP--------------\n');
 %1.-Generate simulated input data------------------------------------------
+for loop = 1:20 %Loop to run multiple times.
 load_points=0;
 if ~load_points
     %Randomly chooses world points, random camera location, computes image
     %locations of the world points, adds noise to the image values LJE
-    n=50; %number of points
+    n=8; %number of points
     std_noise=10; %noise in the measurements (in pixels)
 %     std_noise = 0; %LJE
     [A,point,Rt]=generate_noisy_input_data(n,std_noise);
@@ -72,7 +73,7 @@ U=x2d_h(:,1:2);
 
 %LJE added extra outputs making them available to mathematica
 [Rp,Tp,Xc,sol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A);
-
+end %of loop
 % %LJE writing data to mathematica
 % fileID = fopen('alpha.csv','w');
 % for i=1:50

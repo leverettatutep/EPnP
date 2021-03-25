@@ -90,18 +90,18 @@ for i=1:n
 end
 
 
-%plot noisy points in the image plane
-if ~strcmp(draw_plot,'donotplot')
-    figure; hold on;
-    for i=1:n
-        plot(point(i).Ximg_pix_true(1),point(i).Ximg_pix_true(2),'.','color',[1 0 0]);
-        %txt=sprintf('%d',i);
-        %text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
-        plot(point(i).Ximg_pix(1),point(i).Ximg_pix(2),'o','color',[0 1 0],'markersize',5);
-    end
-    title('Noise in image plane','fontsize',20);
-    grid on;
-end
+% %plot noisy points in the image plane
+% if ~strcmp(draw_plot,'donotplot')
+%     figure; hold on;
+%     for i=1:n
+%         plot(point(i).Ximg_pix_true(1),point(i).Ximg_pix_true(2),'.','color',[1 0 0]);
+%         %txt=sprintf('%d',i);
+%         %text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
+%         plot(point(i).Ximg_pix(1),point(i).Ximg_pix(2),'o','color',[0 1 0],'markersize',5);
+%     end
+%     title('Noise in image plane','fontsize',20);
+%     grid on;
+% end
 
 
 

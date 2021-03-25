@@ -24,6 +24,13 @@ function Cc = findError(camera, alpha, uv)
     %A x = B
     A = equation;
     [V,S] = eig(A);
+%These lines are intended to investigate the number of singular values.
+    sizes = zeros(1,12);
+    for col=1:12
+        sizes(col) = norm(S(:,col))/norm(S(:,12));
+    end
+    sizes
+%end of the SV section
     %Expect only one zero eigenvalue
     V1 = V(:,1)';
 %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
