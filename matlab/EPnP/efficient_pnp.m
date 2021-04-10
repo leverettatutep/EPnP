@@ -1,4 +1,4 @@
-function [R,T,Xc,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A)
+function [Bestsol,sole,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,Trans,NumC)
 %LJE added extra outputs to use in mathematica
 % EFFICIENT_PNP Main Function to solve the PnP problem 
 %       as described in:
@@ -40,17 +40,37 @@ THRESHOLD_REPROJECTION_ERROR=20;%error in degrees of the basis formed by the con
 
 %define control points in a world coordinate system (centered on the 3d
 %points centroid)
-Cw=define_control_points();
+Cw=define_control_points(NumC);
 %The Cw are arbitrarily chosen
 
 %compute alphas (linear combination of the control points to represent the 3d
 %points)
-Alph=compute_alphas(Xw,Cw);
+Alph=compute_alphas(Xw,Cw,NumC);
 
+%Our method
+X1e =findError(A,Alph,U,Trans,NumC); %LJE
+[Cce,Xce,scalee] = compute_norm_sign_scaling_factor(X1e,Cw,Alph,Xw);
+[R,T]=getrotT(Xw,Xce);  %solve exterior orientation
+err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
+
+sol(1).Xc=Xce;
+sol(1).Cc=Cce;
+sol(1).R=R;
+sol(1).T=T;
+sol(1).error=err(1);
+
+% if NumC == 3
+%     R=1;
+%     T=1;
+%     Xc=1;
+%     best_solution=1;
+%     Alph=1;
+%     Cw=1;
+%     Cc=1;
+% end
+% if NumC == 4
 %Compute M
 M=compute_M_ver2(U,Alph,A);
-Cce=findError(A,Alph,U); %LJE
-
 %Compute kernel M
 Km=kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
 %[allK, Se] = eigs(Me);
@@ -59,27 +79,17 @@ Km=kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
 
 %1.-Solve assuming dim(ker(M))=1. X=[Km_end];------------------------------
 dim_kerM=1;
-X1=Km(:,end);
+X1=Km(:,end);%X1(1:3) is Control Point 1, X1(4:7) Control Point 2
 [Cc,Xc,scale]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
-%This scale is dividing his first element by mine.
-scale1 = Cc(1,1)/Cce(1,1);
-Cceh = Cce * scale1;
-%Using this scale makes our solutions match exactly.
-Cc - Cceh;
-%Using this scale makes our solutions differ slightly. Not sure who's is
-%better.
-scale =FindDistances(Cce,Cw);
-Cce = Cce * scale;
-Cc - Cce;
 
 [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
 err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
 
-sol(1).Xc=Xc;
-sol(1).Cc=Cc;
-sol(1).R=R;
-sol(1).T=T;
-sol(1).error=err(1);
+sole.Xc=Xc;
+sole.Cc=Cc;
+sole.R=R;
+sole.T=T;
+sole.error=err(1);
 
 
 %2.-Solve assuming dim(ker(M))=2------------------------------------------
@@ -182,11 +192,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 end
 
 [min_err,best_solution]=min(err);
-Xc=sol(best_solution).Xc;
-R=sol(best_solution).R;
-T=sol(best_solution).T;
-
-
+Bestsol = sol(best_solution);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [R, T]=getrotT(wpts,cpts)

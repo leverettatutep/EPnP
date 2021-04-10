@@ -1,42 +1,40 @@
-function Cc = findError(camera, alpha, uv)
+function V1 = findError(camera, alpha, uv, Trans, NumC)
     n = size(alpha,1);
     uv = uv';
-%     c = [1 1 1; 2 1 1; 1 2 1; 1 1 2]';
-%     cans = [c(1,:) c(2,:) c(3,:)]';
-%     camera = [800 0 320; 0 800 240; 0 0 1];
-%     alpha = rand(n,4);
-%     wuv = camera * c * (alpha');
-%     uv = zeros(2,n);
-%     wi = wuv(3,:);
-%     for i=1:n
-%         uv(:,i) = wuv(1:2,i)/wi(i);
-%     end
-
-    error = zeros(2,12);
-    equation = zeros(12,12);
+    NumUnk = NumC * 3;
+    error = zeros(2,NumUnk);
+    equation = zeros(NumUnk,NumUnk);
     for i =1:n
-        errorI = GetErrorI(camera,alpha(i,:),uv(:,i));
+        errorI = GetErrorI(camera,alpha(i,:),uv(:,i),NumC);
         equation = equation + GetEquationI(camera,alpha(i,:),uv(:,i),errorI);
         error = error + errorI;
     end
-%     equation * cans;
-%     error * cans;
     %A x = B
     A = equation;
     [V,S] = eig(A);
 %These lines are intended to investigate the number of singular values.
-    sizes = zeros(1,12);
-    for col=1:12
-        sizes(col) = norm(S(:,col))/norm(S(:,12));
+    sizes = zeros(1,NumUnk);
+    for col=1:NumUnk
+        sizes(col) = norm(S(:,col));%/norm(S(:,NumUnk));
     end
-    sizes
+    sizes;
 %end of the SV section
     %Expect only one zero eigenvalue
     V1 = V(:,1)';
 %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
      %Cz2 Cz3 Cz4]
-     Cc = [V1(1:4);V1(5:8);V1(9:12)]';
-     
+%However the original paper has them as:
+%Cx1 Cy1 Cz1; Cx2 Cy2 Cz2 ...
+     if NumC == 3
+         Cc = reshape(V1,[3,3]);
+         V1 = reshape(Cc',[9,1]);
+         Ccp = [Cc' ; 1 1 1];
+     else
+         Cc = reshape(V1,[4,3]);
+         V1 = reshape(Cc',[12,1]);
+         Ccp = [Cc' ; 1 1 1 1];
+     end
+     Trans * Ccp;
 %     S
 %     V
 %     AtA=A'*A;
@@ -93,7 +91,7 @@ function equationI = GetEquationI(fuv2,alphaI,uvI,errorI)
 %      end
 end
 
-function errorI = GetErrorI(fuv2,alphaI,uvI)
+function errorI = GetErrorI(fuv2,alphaI,uvI,NumC)
      %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
      %Cz2 Cz3 Cz4]
      fu = fuv2(1,1);
@@ -104,8 +102,13 @@ function errorI = GetErrorI(fuv2,alphaI,uvI)
      fvAlphaI = fv * alphaI;
      ucmuI = (uc - uvI(1)) * alphaI;
      vcmvI = (vc - uvI(2)) * alphaI;
-     errorU = [fuAlphaI 0 0 0 0 ucmuI];
-     errorV = [0 0 0 0 fvAlphaI vcmvI];
+     if NumC == 3
+        errorU = [fuAlphaI 0 0 0 ucmuI];
+        errorV = [0 0 0 fvAlphaI vcmvI];
+     else
+        errorU = [fuAlphaI 0 0 0 0 ucmuI];
+        errorV = [0 0 0 0 fvAlphaI vcmvI];
+     end         
      errorI = [errorU; errorV];
 end
      

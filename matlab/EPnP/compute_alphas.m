@@ -1,4 +1,4 @@
-function Alph=compute_alphas(Xw,Cw)
+function Alph=compute_alphas(Xw,Cw,NumC)
 
 % COMPUTE_ALPHAS Barycentric coordinates computation
 %
@@ -22,10 +22,15 @@ function Alph=compute_alphas(Xw,Cw)
 n=size(Xw,1); %number of 3d points
 
 %generate auxiliar matrix to compute alphas
-C=[Cw';ones(1,4)];
-X=[Xw';ones(1,n)];
-Alph_=inv(C)*X;
+if NumC == 3
+    C=[Cw'];
+    X=[Xw'];
+    Alph_=inv(C)*X;
+    Alph=Alph_';
+else
+    C=[Cw';ones(1,4)];
+    X=[Xw';ones(1,n)];
+    Alph_=inv(C)*X;
+    Alph = Alph_';
+end
 
-
-
-Alph=Alph_';

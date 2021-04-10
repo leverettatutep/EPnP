@@ -1,4 +1,4 @@
-function [A,point,Rt]=generate_noisy_input_data(n,std_noise,draw_plot)
+function [A,point,Rt,centroid]=generate_noisy_input_data(n,std_noise,draw_plot)
 
 % Copyright (C) <2007>  <Francesc Moreno-Noguer, Vincent Lepetit, Pascal Fua>
 % 
@@ -79,7 +79,6 @@ end
 centroid=centroid/n;
 
 
-
 x_rotation=random(0,45,1)*pi/180;
 y_rotation=random(0,45,1)*pi/180;
 z_rotation=random(0,45,1)*pi/180;
@@ -88,37 +87,44 @@ Rt=return_Rt_matrix(x_rotation,y_rotation,z_rotation,tx,ty,tz);
 for i=1:n
    point(i).Xworld=transform_3d(Rt,point(i).Xcam-centroid); 
 end
+xcentroid=[0 0 0]';
+for i=1:n
+    xcentroid=xcentroid+point(i).Xworld;    
+end
+xcentroid=xcentroid/n;
 
 
-% %plot noisy points in the image plane
-% if ~strcmp(draw_plot,'donotplot')
-%     figure; hold on;
-%     for i=1:n
-%         plot(point(i).Ximg_pix_true(1),point(i).Ximg_pix_true(2),'.','color',[1 0 0]);
-%         %txt=sprintf('%d',i);
-%         %text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
-%         plot(point(i).Ximg_pix(1),point(i).Ximg_pix(2),'o','color',[0 1 0],'markersize',5);
-%     end
-%     title('Noise in image plane','fontsize',20);
-%     grid on;
-% end
+%plot noisy points in the image plane
+if ~strcmp(draw_plot,'donotplot')
+    figure; hold on;
+    for i=1:n
+        plot(point(i).Ximg_pix_true(1),point(i).Ximg_pix_true(2),'.','color',[1 0 0]);
+        %txt=sprintf('%d',i);
+        %text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
+        plot(point(i).Ximg_pix(1),point(i).Ximg_pix(2),'o','color',[0 1 0],'markersize',5);
+    end
+    title('Noise in image plane','fontsize',20);
+    grid on;
+end
 
 
 
 
 
 
-%draw 3d points
-% figure; hold on;
-% representation_offset=10;
-% plot3(0,0,0,'.','color',[0 0 0],'markersize',20);
-% for i=1:n
-%    plot3(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),'.','color',[1 0 0],'markersize',12);
-%    txt=sprintf('%d',i);
-%    text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
-%    plot3(point(i).Xworld(1)+representation_offset,point(i).Xworld(2),point(i).Xworld(3),'.','color',[0.8 0.8 0],'markersize',12);
-%    text(point(i).Xworld(1)+representation_offset,point(i).Xworld(2),point(i).Xworld(3),txt);   
-%    plot3(point(i).Ximg(1),point(i).Ximg(2),point(i).Ximg(3),'.','color',[0 0 1],'markersize',12);
-% end
-% grid on;
-% 
+% draw 3d points
+if ~strcmp(draw_plot,'donotplot')
+    figure; hold on;
+    representation_offset=10;
+    plot3(0,0,0,'.','color',[0 0 0],'markersize',20);
+    for i=1:n
+       plot3(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),'.','color',[1 0 0],'markersize',12);
+       txt=sprintf('%d',i);
+       text(point(i).Xcam(1),point(i).Xcam(2),point(i).Xcam(3),txt);
+       plot3(point(i).Xworld(1)+representation_offset,point(i).Xworld(2),point(i).Xworld(3),'.','color',[0 1 0],'markersize',12);
+       text(point(i).Xworld(1)+representation_offset,point(i).Xworld(2),point(i).Xworld(3),txt);   
+       plot3(point(i).Ximg(1),point(i).Ximg(2),point(i).Ximg(3),'.','color',[0 0 1],'markersize',12);
+    end
+    grid on;
+end
+

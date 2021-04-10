@@ -1,4 +1,4 @@
-function Cw=define_control_points()
+function Cw=define_control_points(number)
 
 % Copyright (C) <2007>  <Francesc Moreno-Noguer, Vincent Lepetit, Pascal Fua>
 % 
@@ -16,10 +16,17 @@ function Cw=define_control_points()
 % Francesc Moreno-Noguer, CVLab-EPFL, September 2007.
 % fmorenoguer@gmail.com, http://cvlab.epfl.ch/~fmoreno/ 
 
-Cw=[1 0 0;
-    0 1 0;
-    0 0 1;
-    0 0 0];
+if nargin<1 
+    number=4; 
+end
+if number == 3
+    Cw = eye(3);
+else
+    Cw=[1 0 0;
+        0 1 0;
+        0 0 1;
+        0 0 0];
+end
 %LJE testing to see impact of other values of Cw
 % Cw=[1 0 0;
 %     0 1 0;

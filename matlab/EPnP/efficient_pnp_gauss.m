@@ -52,7 +52,7 @@ Cw=define_control_points();
 
 %compute alphas (linear combination of the control points to represent the 3d
 %points)
-Alph=compute_alphas(Xw,Cw);
+Alph=compute_alphas(Xw,Cw,4);
 
 %Compute M
 M=compute_M_ver2(U,Alph,A);

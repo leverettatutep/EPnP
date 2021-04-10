@@ -26,7 +26,8 @@ addpath data;
 addpath error;
 addpath EPnP;
 
-
+NumC = 4;
+rng(1234);
 fprintf('\n---------EPnP--------------\n');
 %1.-Generate simulated input data------------------------------------------
 for loop = 1:20 %Loop to run multiple times.
@@ -34,13 +35,18 @@ load_points=0;
 if ~load_points
     %Randomly chooses world points, random camera location, computes image
     %locations of the world points, adds noise to the image values LJE
-    n=8; %number of points
+    n=10; %number of points
     std_noise=10; %noise in the measurements (in pixels)
 %     std_noise = 0; %LJE
-    [A,point,Rt]=generate_noisy_input_data(n,std_noise);
-    save('data\input_data_noise.mat','A','point','Rt');
+    [A,point,Rt,centroid]=generate_noisy_input_data(n,std_noise,'donotplot');
+    Trans = Rt;
+    Trans(1:4,4) = -Trans * [centroid ; 1];
+    Trans(4,4) = 1;
+    this = Trans * [(point(1).Xcam);1];
+    this - ([point(1).Xworld;1]);
+    save('data\input_data_noise.mat','A','point','Rt','Trans');
 else
-    load('data\input_data_noise.mat','A','point','Rt');
+    load('data\input_data_noise.mat','A','point','Rt','Trans');
     n=size(point,2);
     draw_noisy_input_data(point);
 end
@@ -72,7 +78,17 @@ Xw=x3d_h(:,1:3);
 U=x2d_h(:,1:2);
 
 %LJE added extra outputs making them available to mathematica
-[Rp,Tp,Xc,sol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A);
+[Bestsol,Mysol,NumOfSV,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,Trans,NumC);
+Rp = Bestsol.R;
+Tp = Bestsol.T;
+Xc = Bestsol.Xc;
+errorIs = Mysol.error - Bestsol.error;
+if abs(errorIs) > 0.1
+    display('The number of SV and My error minus his, - means I win  ')
+    NumOfSV
+    errorIs
+end
+
 end %of loop
 % %LJE writing data to mathematica
 % fileID = fopen('alpha.csv','w');
