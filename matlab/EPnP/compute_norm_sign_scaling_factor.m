@@ -35,7 +35,12 @@ dist_w=FindDistancesBetweenPoints(Xw);
 dist_c=FindDistancesBetweenPoints(Xc_);
  
 %least squares solution for the scale factor
-sc=1/(inv(dist_c'*dist_c)*dist_c'*dist_w);
+%If there was a single point then dist_w and dist_c would be 1 by 1
+%Solution would be dist_c beta = dist_W and beta = inv(dist_c) * dist_w
+%So for multiple points (n) there are n equations like those above
+%There are n-1 too many equations so you must find the BEST or least square
+%Solution which is: A x = B -> A' * A x = A' B -> x = inv(A' * A)(A' * B)
+sc=1/(inv(dist_c'*dist_c)*dist_c'*dist_w); %scale is 1/beta
 
 %scale position of the control points
 Cc=Cc_/sc;

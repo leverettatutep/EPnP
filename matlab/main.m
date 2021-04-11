@@ -37,16 +37,21 @@ if ~load_points
     %locations of the world points, adds noise to the image values LJE
     n=10; %number of points
     std_noise=10; %noise in the measurements (in pixels)
-%     std_noise = 0; %LJE
-    [A,point,Rt,centroid]=generate_noisy_input_data(n,std_noise,'donotplot');
-    Trans = Rt;
-    Trans(1:4,4) = -Trans * [centroid ; 1];
-    Trans(4,4) = 1;
-    this = Trans * [(point(1).Xcam);1];
-    this - ([point(1).Xworld;1]);
-    save('data\input_data_noise.mat','A','point','Rt','Trans');
+    std_noise = 0; %LJE
+    [Camera,point,tFromCtoW]=generate_noisy_input_data(n,std_noise,'donotplot');
+% I plan to define points as 4 by n and 4th row is 1
+    TheW = zeros(4,n);
+    TheC = TheW;
+    for i=1:n
+        TheW(:,i) = [point(i).Xworld;1];
+        TheC(:,i) = [point(i).Xcam;1];
+    end
+    TransCtoW = getTransFromA2B(TheW,TheC); %Get T from C to W
+    TransWtoC = invT(TransCtoW);
+    TheseAre0 = TheC - TransCtoW * TheW;
+    save('data\input_data_noise.mat','Camera','point','tFromCtoW','TheW','TheC','TransCtoW','TransWtoC');
 else
-    load('data\input_data_noise.mat','A','point','Rt','Trans');
+    load('data\input_data_noise.mat','Camera','point','tFromCtoW','TheW','TheC','TransCtoW','TransWtoC');
     n=size(point,2);
     draw_noisy_input_data(point);
 end
@@ -62,7 +67,7 @@ end
 %% 2.-Inputs format--------------------------------
 % x3d=zeros(n,4);
 % x2d=zeros(n,3); 
-A=A(:,1:3);
+Camera=Camera(:,1:3);
 %LJE Attaching a 1 at the end of points
 for i=1:n
     x3d_h(i,:)=[point(i).Xworld',1]; 
@@ -78,17 +83,26 @@ Xw=x3d_h(:,1:3);
 U=x2d_h(:,1:2);
 
 %LJE added extra outputs making them available to mathematica
-[Bestsol,Mysol,NumOfSV,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,Trans,NumC);
+[Bestsol,Mysol,NumOfSV,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,Camera,NumC);
 Rp = Bestsol.R;
 Tp = Bestsol.T;
+Transp = MakeT(Rp,Tp); %Trans from C to W
 Xc = Bestsol.Xc;
+
+Rpe = Mysol.R;
+Tpe = Mysol.T;
+Transe = MakeT(Rpe,Tpe); %Trans from C to W
+Xce = Mysol.Xc;
+
 errorIs = Mysol.error - Bestsol.error;
 if abs(errorIs) > 0.1
     display('The number of SV and My error minus his, - means I win  ')
-    NumOfSV
-    errorIs
+    SvAndError = [NumOfSV errorIs]
 end
-
+[Bang,Baxis,Bdist] = Screws(invT(Transp) * Transe,1);
+if (abs(Bang)+abs(Bdist)) > .1
+    AngleDist = [Bang Bdist]
+end
 end %of loop
 % %LJE writing data to mathematica
 % fileID = fopen('alpha.csv','w');
@@ -118,7 +132,7 @@ plot_3d_reconstruction(point,'EPnP (Old)',h);
 xlim([-2 2]); ylim([-2 2]);
 
 %compute error
-error=reprojection_error_usingRT(Xw,U,Rp,Tp,A);
+error=reprojection_error_usingRT(Xw,U,Rp,Tp,Camera);
 fprintf('error EPnP: %.3f\n',error);
 
 
@@ -126,7 +140,7 @@ fprintf('error EPnP: %.3f\n',error);
 Xw=x3d_h(:,1:3);
 U=x2d_h(:,1:2);
 
-[Rp,Tp,Xc,sol]=efficient_pnp_gauss(x3d_h,x2d_h,A);
+[Rp,Tp,Xc,sol]=efficient_pnp_gauss(x3d_h,x2d_h,Camera);
 
 %draw Results
 for i=1:n
@@ -136,7 +150,7 @@ figure; h=gcf;
 plot_3d_reconstruction(point,'EPnP Gauss Newton',h);
 
 %compute error
-error=reprojection_error_usingRT(Xw,U,Rp,Tp,A);
+error=reprojection_error_usingRT(Xw,U,Rp,Tp,Camera);
 fprintf('error EPnP_Gauss_Newton: %.3f\n',error);
 xlim([-2 2]); ylim([-2 2]);
 

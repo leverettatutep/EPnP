@@ -1,4 +1,4 @@
-function [A,point,Rt,centroid]=generate_noisy_input_data(n,std_noise,draw_plot)
+function [A,point,tFromWtoC,xcentroid]=generate_noisy_input_data(n,std_noise,draw_plot)
 
 % Copyright (C) <2007>  <Francesc Moreno-Noguer, Vincent Lepetit, Pascal Fua>
 % 
@@ -92,7 +92,9 @@ for i=1:n
     xcentroid=xcentroid+point(i).Xworld;    
 end
 xcentroid=xcentroid/n;
-
+tFromWtoC = Rt';
+tFromWtoC(1:3,4) = centroid;
+tFromWtoC(4,1:3) = 0;
 
 %plot noisy points in the image plane
 if ~strcmp(draw_plot,'donotplot')

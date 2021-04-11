@@ -1,4 +1,4 @@
-function [Bestsol,sole,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,Trans,NumC)
+function [Bestsol,sole,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,NumC)
 %LJE added extra outputs to use in mathematica
 % EFFICIENT_PNP Main Function to solve the PnP problem 
 %       as described in:
@@ -48,16 +48,17 @@ Cw=define_control_points(NumC);
 Alph=compute_alphas(Xw,Cw,NumC);
 
 %Our method
-X1e =findError(A,Alph,U,Trans,NumC); %LJE
+FourXe =findError(A,Alph,U,NumC); %LJE the four smallest eigenvectors
+X1e = FourXe(:,1);
 [Cce,Xce,scalee] = compute_norm_sign_scaling_factor(X1e,Cw,Alph,Xw);
-[R,T]=getrotT(Xw,Xce);  %solve exterior orientation
-err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
+[R,T]=getrotT(Xw,Xce);  %solve exterior orientation from C to W
+erre=reprojection_error_usingRT(Xw,U,R,T,A);
 
-sol(1).Xc=Xce;
-sol(1).Cc=Cce;
-sol(1).R=R;
-sol(1).T=T;
-sol(1).error=err(1);
+sole.Xc=Xce;
+sole.Cc=Cce;
+sole.R=R;
+sole.T=T;
+sole.error=erre;
 
 % if NumC == 3
 %     R=1;
@@ -82,14 +83,14 @@ dim_kerM=1;
 X1=Km(:,end);%X1(1:3) is Control Point 1, X1(4:7) Control Point 2
 [Cc,Xc,scale]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
 
-[R,T]=getrotT(Xw,Xc);  %solve exterior orientation
+[R,T]=getrotT(Xw,Xc);  %solve exterior orientation from c to w
 err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
 
-sole.Xc=Xc;
-sole.Cc=Cc;
-sole.R=R;
-sole.T=T;
-sole.error=err(1);
+sol(1).Xc=Xc;
+sol(1).Cc=Cc;
+sol(1).R=R;
+sol(1).T=T;
+sol(1).error=err(1);
 
 
 %2.-Solve assuming dim(ker(M))=2------------------------------------------

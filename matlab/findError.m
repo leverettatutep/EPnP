@@ -1,4 +1,4 @@
-function V1 = findError(camera, alpha, uv, Trans, NumC)
+function theVs = findError(camera, alpha, uv, NumC)
     n = size(alpha,1);
     uv = uv';
     NumUnk = NumC * 3;
@@ -19,43 +19,25 @@ function V1 = findError(camera, alpha, uv, Trans, NumC)
     end
     sizes;
 %end of the SV section
-    %Expect only one zero eigenvalue
-    V1 = V(:,1)';
 %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
      %Cz2 Cz3 Cz4]
 %However the original paper has them as:
 %Cx1 Cy1 Cz1; Cx2 Cy2 Cz2 ...
-     if NumC == 3
-         Cc = reshape(V1,[3,3]);
-         V1 = reshape(Cc',[9,1]);
-         Ccp = [Cc' ; 1 1 1];
-     else
-         Cc = reshape(V1,[4,3]);
-         V1 = reshape(Cc',[12,1]);
-         Ccp = [Cc' ; 1 1 1 1];
-     end
-     Trans * Ccp;
-%     S
-%     V
-%     AtA=A'*A;
-%     [V,S]=eig(AtA);
-%     S
-%     V
-% 
-%     z = 11;
-%     A8 = A(1:z,1:z);
-%     [V,S,W] = eig(A8);
-%     S
-%     V
-% 
-%     AtA8=A8'*A8;
-%     [V,S]=eig(AtA8);
-%     S
-%     V
+    V1 = reorderV(V(:,1)',NumC);
+    V2 = reorderV(V(:,2)',NumC);
+    V3 = reorderV(V(:,3)',NumC);
+    V4 = reorderV(V(:,4)',NumC);
+    theVs = [V1 V2 V3 V4];
+%      if NumC == 3
+%          Cc = reshape(V1,[3,3]);
+%          V1 = reshape(Cc',[9,1]);
+%          Ccp = [Cc' ; 1 1 1];
+%      else
+%          Cc = reshape(V1,[4,3]);
+%          V1 = reshape(Cc',[12,1]);
+%          Ccp = [Cc' ; 1 1 1 1];
+%      end
 
-%     B = zeros(12,1);
-%     B8 = B(1:z);
-%     A8\B8
 end
 
 function vector = GetVector(c,tail, head)
