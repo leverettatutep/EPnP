@@ -1,4 +1,4 @@
-function K=kernel_noise(M,dimker)
+function [K,ss,vv]=kernel_noise(M,dimker)
 
 % Copyright (C) <2007>  <Francesc Moreno-Noguer, Vincent Lepetit, Pascal Fua>
 % 
@@ -18,5 +18,9 @@ function K=kernel_noise(M,dimker)
 
 MtM=M'*M;
 [V,S]=eig(MtM);
-
+vv=V(:,1:4);
+ss=zeros(4,1);
+for i=1:4
+    ss(i) = S(i,i);
+end
 K=V(:,dimker:-1:1);

@@ -1,1 +1,5 @@
 *.asv
+matlab/AnA.mat
+*.mat
+*.mat
+matlab/data/input_data_noise.mat

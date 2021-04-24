@@ -23,7 +23,12 @@ n=size(Xw,1); %number of data points
 %impose distance constraints between the reference points
 
 %scaled position of the control points in camera coordinates
-Cc_ = reshape(X1,[3,4])'; %Cc row 1 is CP 1, Cc row 2 is CP 2 
+numRows = size(X1,1);
+if numRows == 12
+    Cc_ = reshape(X1,[3,4])'; %Cc row 1 is CP 1, Cc row 2 is CP 2 
+else
+    Cc_ = reshape(X1,[3,3])';
+end
 
 %position of reference points in camera coordinates
 Xc_=Alph*Cc_;
@@ -55,9 +60,3 @@ if size(neg_z,1)>=1
     sc=-sc;
     Xc=Xc*(-1);
 end
-
-
-
-
-        
-        

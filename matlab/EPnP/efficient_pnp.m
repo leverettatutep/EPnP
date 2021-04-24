@@ -1,4 +1,4 @@
-function [Bestsol,sole,best_solution,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,NumC)
+function [Bestsol,Alph,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,A,NumC)
 %LJE added extra outputs to use in mathematica
 % EFFICIENT_PNP Main Function to solve the PnP problem 
 %       as described in:
@@ -47,18 +47,18 @@ Cw=define_control_points(NumC);
 %points)
 Alph=compute_alphas(Xw,Cw,NumC);
 
-%Our method
-FourXe =findError(A,Alph,U,NumC); %LJE the four smallest eigenvectors
-X1e = FourXe(:,1);
-[Cce,Xce,scalee] = compute_norm_sign_scaling_factor(X1e,Cw,Alph,Xw);
-[R,T]=getrotT(Xw,Xce);  %solve exterior orientation from C to W
-erre=reprojection_error_usingRT(Xw,U,R,T,A);
-
-sole.Xc=Xce;
-sole.Cc=Cce;
-sole.R=R;
-sole.T=T;
-sole.error=erre;
+% %Our method
+% FourXe =findError(A,Alph,U,NumC); %LJE the four smallest eigenvectors
+% X1e = FourXe(:,1);
+% [Cce,Xce,scalee] = compute_norm_sign_scaling_factor(X1e,Cw,Alph,Xw);
+% [R,T]=getrotT(Xw,Xce);  %solve exterior orientation from C to W
+% erre=reprojection_error_usingRT(Xw,U,R,T,A);
+% 
+% sole.Xc=Xce;
+% sole.Cc=Cce;
+% sole.R=R;
+% sole.T=T;
+% sole.error=erre;
 
 % if NumC == 3
 %     R=1;
@@ -73,15 +73,16 @@ sole.error=erre;
 %Compute M
 M=compute_M_ver2(U,Alph,A);
 %Compute kernel M
-Km=kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
+[Km,vals,vv] =kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
 %[allK, Se] = eigs(Me);
 %Kme = allK(:,1);
 
-
+beta1 = 0; beta2=0;beta3=0;beta4=0;
 %1.-Solve assuming dim(ker(M))=1. X=[Km_end];------------------------------
 dim_kerM=1;
 X1=Km(:,end);%X1(1:3) is Control Point 1, X1(4:7) Control Point 2
 [Cc,Xc,scale]=compute_norm_sign_scaling_factor(X1,Cw,Alph,Xw);
+beta1 = 1/scale;
 
 [R,T]=getrotT(Xw,Xc);  %solve exterior orientation from c to w
 err(1)=reprojection_error_usingRT(Xw,U,R,T,A);
@@ -91,7 +92,10 @@ sol(1).Cc=Cc;
 sol(1).R=R;
 sol(1).T=T;
 sol(1).error=err(1);
+sol(1).scale = scale;
 
+sol(1).TC2W = MakeT(R,T);
+sol(1).beta = [beta1 beta2 beta3 beta4];
 
 %2.-Solve assuming dim(ker(M))=2------------------------------------------
 Km1=Km(:,end-1);
@@ -99,13 +103,13 @@ Km2=Km(:,end);
 
 %control points distance constraint
 D=compute_constraint_distance_2param_6eq_3unk(Km1,Km2);
-dsq=define_distances_btw_control_points();
+dsq=define_distances_btw_control_points(Cw);
 betas_=inv(D'*D)*D'*dsq;
 beta1=sqrt(abs(betas_(1)));
 beta2=sqrt(abs(betas_(3)))*sign(betas_(2))*sign(betas_(1));
 X2=beta1*Km1+beta2*Km2;
 
-[Cc,Xc]=compute_norm_sign_scaling_factor(X2,Cw,Alph,Xw);
+[Cc,Xc,scale2]=compute_norm_sign_scaling_factor(X2,Cw,Alph,Xw);
 
 [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
 err(2)=reprojection_error_usingRT(Xw,U,R,T,A);
@@ -115,8 +119,10 @@ sol(2).Cc=Cc;
 sol(2).R=R;
 sol(2).T=T;
 sol(2).error=err(2);
+    sol(2).scale=scale2;
 
-
+sol(2).TC2W = MakeT(R,T);
+sol(2).beta = [beta1 beta2 beta3 beta4];
 
 %3.-Solve assuming dim(ker(M))=3------------------------------------------
 if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good solution in the previus cases
@@ -127,7 +133,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 
     %control points distance constraint
     D=compute_constraint_distance_3param_6eq_6unk(Km1,Km2,Km3);
-    dsq=define_distances_btw_control_points();
+    dsq=define_distances_btw_control_points(Cw);
     betas_=inv(D)*dsq;
     beta1=sqrt(abs(betas_(1)));
     beta2=sqrt(abs(betas_(4)))*sign(betas_(2))*sign(betas_(1));
@@ -135,7 +141,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 
     X3=beta1*Km1+beta2*Km2+beta3*Km3;
 
-    [Cc,Xc]=compute_norm_sign_scaling_factor(X3,Cw,Alph,Xw);
+    [Cc,Xc,scale3]=compute_norm_sign_scaling_factor(X3,Cw,Alph,Xw);
   
     [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
     err(3)=reprojection_error_usingRT(Xw,U,R,T,A);
@@ -145,6 +151,10 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
     sol(3).R=R;
     sol(3).T=T;
     sol(3).error=err(3);
+    sol(3).scale=scale3;
+
+sol(3).TC2W = MakeT(R,T);
+sol(3).beta = [beta1 beta2 beta3 beta4];
 
 end
 
@@ -159,7 +169,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 
 
     D=compute_constraint_distance_orthog_4param_9eq_10unk(Km1,Km2,Km3,Km4);
-    dsq=define_distances_btw_control_points();
+    dsq=define_distances_btw_control_points(Cw);
     lastcolumn=[-dsq',0,0,0]';
     D_=[D,lastcolumn];
     Kd=null(D_);
@@ -179,7 +189,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
     beta4=sqrt(abs(betass_(10)))*sign(betass_(4));
     X4=beta1*Km1+beta2*Km2+beta3*Km3+beta4*Km4;
 
-    [Cc,Xc]=compute_norm_sign_scaling_factor(X4,Cw,Alph,Xw);
+    [Cc,Xc,scale4]=compute_norm_sign_scaling_factor(X4,Cw,Alph,Xw);
     
     [R,T]=getrotT(Xw,Xc);  %solve exterior orientation
     err(4)=reprojection_error_usingRT(Xw,U,R,T,A);
@@ -189,10 +199,26 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
     sol(4).R=R;
     sol(4).T=T;
     sol(4).error=err(4);
+    sol(4).scale=scale4;
+
+sol(4).TC2W = MakeT(R,T);
+sol(4).beta = [beta1 beta2 beta3 beta4];
 
 end
-
+for i=1:4
+    sol(i).NumZeros = i;
+end
+    Km1=Km(:,end-3);
+    Km2=Km(:,end-2);
+    Km3=Km(:,end-1);
+    Km4=Km(:,end);
+Khis = [Km4 Km3 Km2 Km1];
 [min_err,best_solution]=min(err);
+sol(best_solution).NumZeros = best_solution;
+sol(best_solution).Xw=Xw;
+sol(best_solution).Cw=Cw;
+sol(best_solution).EigVec = vv;
+sol(best_solution).EigVals= vals;
 Bestsol = sol(best_solution);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

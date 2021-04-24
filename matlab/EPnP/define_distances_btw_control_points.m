@@ -1,4 +1,4 @@
-function dsq=define_distances_btw_control_points()
+function dsq=define_distances_btw_control_points(Cw)
 
 % Copyright (C) <2007>  <Francesc Moreno-Noguer, Vincent Lepetit, Pascal Fua>
 % 
@@ -22,6 +22,10 @@ c1=[1,0,0];
 c2=[0,1,0];
 c3=[0,0,1];
 c4=[0,0,0];
+c1 = Cw(1,:);
+c2 = Cw(2,:);
+c3 = Cw(3,:);
+c4 = Cw(4,:);
 
 d12=(c1(1)-c2(1))^2 + (c1(2)-c2(2))^2 + (c1(3)-c2(3))^2;
 d13=(c1(1)-c3(1))^2 + (c1(2)-c3(2))^2 + (c1(3)-c3(3))^2;

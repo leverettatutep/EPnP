@@ -86,7 +86,7 @@ Km2=Km(:,end);
 
 %control points distance constraint
 D=compute_constraint_distance_2param_6eq_3unk(Km1,Km2);
-dsq=define_distances_btw_control_points();
+dsq=define_distances_btw_control_points(Cw);
 betas_=inv(D'*D)*D'*dsq;
 beta1=sqrt(abs(betas_(1)));
 beta2=sqrt(abs(betas_(3)))*sign(betas_(2))*sign(betas_(1));
@@ -117,7 +117,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 
     %control points distance constraint
     D=compute_constraint_distance_3param_6eq_6unk(Km1,Km2,Km3);
-    dsq=define_distances_btw_control_points();
+    dsq=define_distances_btw_control_points(Cw);
     betas_=inv(D)*dsq;
     beta1=sqrt(abs(betas_(1)));
     beta2=sqrt(abs(betas_(4)))*sign(betas_(2))*sign(betas_(1));
@@ -152,7 +152,7 @@ if min(err)>THRESHOLD_REPROJECTION_ERROR %just compute if we do not have good so
 
 
     D=compute_constraint_distance_orthog_4param_9eq_10unk(Km1,Km2,Km3,Km4);
-    dsq=define_distances_btw_control_points();
+    dsq=define_distances_btw_control_points(Cw);
     lastcolumn=[-dsq',0,0,0]';
     D_=[D,lastcolumn];
     Kd=null(D_);

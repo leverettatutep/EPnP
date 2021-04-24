@@ -1,4 +1,4 @@
-function theVs = findError(camera, alpha, uv, NumC)
+function [theVs, theVals, vt, st] = findError(camera, alpha, uv, NumC)
     n = size(alpha,1);
     uv = uv';
     NumUnk = NumC * 3;
@@ -12,13 +12,9 @@ function theVs = findError(camera, alpha, uv, NumC)
     %A x = B
     A = equation;
     [V,S] = eig(A);
-%These lines are intended to investigate the number of singular values.
-    sizes = zeros(1,NumUnk);
-    for col=1:NumUnk
-        sizes(col) = norm(S(:,col));%/norm(S(:,NumUnk));
-    end
-    sizes;
-%end of the SV section
+    [vt,st] = eig(A * A');
+    st = sqrt(st); %These are the same as S
+    %vt is +or- V
 %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
      %Cz2 Cz3 Cz4]
 %However the original paper has them as:
@@ -28,6 +24,7 @@ function theVs = findError(camera, alpha, uv, NumC)
     V3 = reorderV(V(:,3)',NumC);
     V4 = reorderV(V(:,4)',NumC);
     theVs = [V1 V2 V3 V4];
+    theVals = [S(1,1) S(2,2) S(3,3) S(4,4)];
 %      if NumC == 3
 %          Cc = reshape(V1,[3,3]);
 %          V1 = reshape(Cc',[9,1]);
