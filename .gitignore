@@ -3,3 +3,10 @@ matlab/AnA.mat
 *.mat
 *.mat
 matlab/data/input_data_noise.mat
+NewPoints.pdf
+Rotation.pdf
+matlab/Screws.m
+matlab/MakeT.m
+matlab/invT.m
+matlab/getTransFromA2B.m
+matlab/EPnP/reprojection_error_usingRT.m

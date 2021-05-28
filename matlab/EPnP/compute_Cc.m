@@ -32,4 +32,5 @@ Xc=Alpha*Cc;
 neg_z=find(Xc(:,3)<0);
 if size(neg_z,1)>=1
     Xc=Xc*(-1);
+    Cc = Cc * (-1);
 end

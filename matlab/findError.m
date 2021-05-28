@@ -12,6 +12,7 @@ function [theVs, theVals, vt, st] = findError(camera, alpha, uv, NumC)
     %A x = B
     A = equation;
     [V,S] = eig(A);
+%     A * V(:,1:5)
     [vt,st] = eig(A * A');
     st = sqrt(st); %These are the same as S
     %vt is +or- V

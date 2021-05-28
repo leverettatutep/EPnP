@@ -1,4 +1,6 @@
-function [ang, axis, dist] = Screws(t,ReturnDegrees)
+function [ang, axis, dist, scale] = Screws(t,ASecondInputMeansReturnDegrees)
+    scale = nthroot(det(t),3);
+    t = t/scale;
     axis = zeros(3,1);
     cosine = (t(1,1)+t(2,2)+t(3,3)-1)/2;
     kysine = t(1,3)-t(3,1);
@@ -21,5 +23,6 @@ function [ang, axis, dist] = Screws(t,ReturnDegrees)
     if size(t,1) == 4
         dist = sqrt(t(1:3,4)' * t(1:3,4));
     end
+%     dist = dist / scale;
 end
     

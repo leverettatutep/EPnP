@@ -3,17 +3,18 @@ clear all; close all; clc;
 addpath data;
 addpath error;
 addpath EPnP;
+addpath Transformations;
 
 %Parameters to control
 NumC = 4;
 NumPoints = 10;
 Noise = 10;
-Noise = 10;
+% Noise = 0;
 Loops = 1000;
 load_points=0;
 
 winners = zeros(Loops,1);
-numOfZeros = zeros(Loops,1);
+% numOfZeros = zeros(Loops,1);
 me = zeros(Loops,4);
 him = zeros(Loops,4);
 eigDif = zeros(Loops,2);
@@ -27,7 +28,7 @@ if ~load_points
     %locations of the world points, adds noise to the image values LJE
     n=NumPoints; %number of points
     std_noise=Noise; %noise in the measurements (in pixels)
-    [Camera,point,tFromCtoW]=generate_noisy_input_data(n,std_noise,'donotplot');
+    [Camera,point,tFromCtoW,centroid]=generate_noisy_input_data(n,std_noise,'donotplot');
 % I plan to define points as 4 by n and 4th row is 1
     TheW = zeros(4,n);
     TheC = TheW;
@@ -35,18 +36,8 @@ if ~load_points
         TheW(:,i) = [point(i).Xworld;1];
         TheC(:,i) = [point(i).Xcam;1];
     end
-    TransCtoW = getTransFromA2B(TheW,TheC); %Get T from C to W
-    TransWtoC = invT(TransCtoW);
-    TheseAre0 = max(max(abs(TheC - TransCtoW * TheW)));
-    [Bang,~,Bdist] = Screws(tFromCtoW * TransWtoC,1);
-    TheseAreAlso0 = [abs(Bang),abs(Bdist)];
-    if abs(Bang)+abs(Bdist)+TheseAre0 > 0.0001
-        display('There is an error.');
-    end
-%     if (abs(Bang)+abs(Bdist)) > .1
-%         InitialAngleDist = [Bang Bdist]
-%     end
-%      save('data\input_data_noise.mat','Camera','point','tFromCtoW','TheW','TheC','TransCtoW','TransWtoC');
+    [TransCtoW,CIsBiggerBy] = GetScaleTransFromA2B(TheC,TheW); %Get T from C to W
+    [TransWtoC,WIsBiggerBy] = InvT(TransCtoW);
      fclose('all');
 else
     load('data\input_data_noise.mat','Camera','point','tFromCtoW','TheW','TheC','TransCtoW','TransWtoC');
@@ -73,16 +64,25 @@ U=x2d_h(:,1:2);
 [Bestsol,alphas,Cw,Cc]=efficient_pnp(x3d_h,x2d_h,Camera,NumC);
 Rp = Bestsol.R;
 Tp = Bestsol.T;
-TransHis = MakeT(Rp,Tp); %Trans from C to W
+TransHis = MakeTFromRTS(Rp,Tp); %Trans from C to W same as Bestsol.TC2W
 Xc = Bestsol.Xc;
+pCw = MakeHomoPts(Cw');
+pCc = MakeHomoPts(-Cc');
 
-[Bang,~,Bdist] = Screws(invT(tFromCtoW) * TransHis);
+% max(max(Bestsol.TC2W * MakeHomoPts(Bestsol.Xw') - MakeHomoPts(Bestsol.Xc')))
+% max(max(Bestsol.TC2W * pCw - pCc))
+[TC2Whis,scaleHis]=GetScaleTransFromA2B(pCc,pCw);
+% max(max(TC2Whis * inv(GetScaleTransFromA2B(-Cc',Cw')) - eye(4)))
+% max(max(GetScaleTransFromA2B(Bestsol.Xc',Bestsol.Xw')*inv(TC2Whis) - eye(4)))
+% TC2Whis
+
+[Bang,~,Bdist] = Screws(InvT(tFromCtoW) * TransHis,1);
 TransErrorh = sqrt(Bang^2+Bdist^2);
 him(loop,:) = [Bestsol.error Bestsol.NumZeros Bang Bdist];
 
 %% My solution-------------------------------------------------
 %LJE added extra outputs making them available to mathematica
-[Mysol,alphas,vt,st]=efficient_pnpE(Xw,U,Camera,NumC,Bestsol.EigVec,Bestsol.beta,Bestsol.scale,Bestsol.NumZeros);
+[Mysol,alphas,vt,st]=efficient_pnpE(Xw,U,Camera,NumC,Bestsol.EigVec,Bestsol.beta,Bestsol.scale,Bestsol.NumZeros,TransCtoW);
 Xce = Mysol.Xc;
 Xwe = Mysol.Xw;
 Cce = Mysol.Cc;
@@ -91,49 +91,35 @@ EigVec = Mysol.EigVec;
 EigVals = Mysol.EigVals/2; %My vals are two times his
 TC2W = Mysol.TC2W;
 error = Mysol.error;
-if Mysol.NumZeros > 1
-    Mysol.NumZeros
-    Cce
-end
+% if Mysol.NumZeros > 1
+%     Mysol.NumZeros
+%     Cce
+% end
 
-[Bang,~,Bdist] = Screws(invT(tFromCtoW) * TC2W);
+% max(max(Bestsol.TC2W * inv(Mysol.TC2W) - eye(4)))
+% max(max(Bestsol.Xc - Mysol.Xc))
+pCwe = MakeHomoPts(Mysol.Cw');
+pCce = MakeHomoPts(-Mysol.Cc');
+
+% max(max(Mysol.TC2W * MakeHomoPts(Mysol.Xw') - MakeHomoPts(Mysol.Xc')))
+% max(max(Mysol.TC2W * pCwe - pCce))
+[TC2We,scalee]=GetScaleTransFromA2B(pCce,pCwe);
+% max(max(TC2We * inv(GetScaleTransFromA2B(-Cce',Cwe')) - eye(4)))
+% max(max(GetScaleTransFromA2B(Mysol.Xc',Mysol.Xw')*inv(TC2We) - eye(4)))
+% max(max(TC2We * inv(TC2W) - eye(4)))
+
+[Bang,~,Bdist] = Screws(InvT(tFromCtoW) * TC2W,1);
 TransError = sqrt(Bang^2+Bdist^2);
 me(loop,:) = [error Mysol.NumZeros Bang Bdist];
 
 %% Comparing ----------------------------------------------------
-errorIs = error - Bestsol.error;
-if errorIs < 38 && errorIs > 24.3
-    display ('here now');
-end
-if (TransErrorh - TransError) < -1.88
-    display ('this is it');
-end
-eigDif(loop,:) = [max(abs(EigVals - Bestsol.EigVals')) max(max(abs(abs(EigVec) - abs(Bestsol.EigVec))))];
+% errorIs = error - Bestsol.error;
+% eigDif(loop,:) = [max(abs(EigVals - Bestsol.EigVals')) max(max(abs(abs(EigVec) - abs(Bestsol.EigVec))))];
 %my eigenvectors are +or- his
 % The eigenvalues are identical always
 % The eigenvectors can differ
-if error > Bestsol.error
-    display('He wins')
-else
-    display('I win')
-end
-
+    loop
 end %of loop
-% [max(winners) min(winners) max(numOfZeros)]
-% sumMe = 0;
-% sumHe = 0;
-% numMe = 0;
-% numHe = 0;
-% for loop=1:Loops
-%     if winners(loop) < 0
-%         numMe = numMe+1;
-%         sumMe = sumMe + winners(loop);
-%     else
-%         numHe = numHe+1;
-%         sumHe = sumHe + winners(loop);
-%     end
-% end
-% [sumMe/numMe sumHe/numHe]
 
 %draw Results
 for i=1:n
@@ -165,6 +151,8 @@ plot_3d_reconstruction(point,'EPnP Gauss Newton',h);
 error=reprojection_error_usingRT(Xw,U,Rp,Tp,Camera);
 fprintf('error EPnP_Gauss_Newton: %.3f\n',error);
 xlim([-2 2]); ylim([-2 2]);
+
+HimMe = him - me;
 
 
 

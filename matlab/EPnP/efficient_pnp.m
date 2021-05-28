@@ -47,33 +47,11 @@ Cw=define_control_points(NumC);
 %points)
 Alph=compute_alphas(Xw,Cw,NumC);
 
-% %Our method
-% FourXe =findError(A,Alph,U,NumC); %LJE the four smallest eigenvectors
-% X1e = FourXe(:,1);
-% [Cce,Xce,scalee] = compute_norm_sign_scaling_factor(X1e,Cw,Alph,Xw);
-% [R,T]=getrotT(Xw,Xce);  %solve exterior orientation from C to W
-% erre=reprojection_error_usingRT(Xw,U,R,T,A);
-% 
-% sole.Xc=Xce;
-% sole.Cc=Cce;
-% sole.R=R;
-% sole.T=T;
-% sole.error=erre;
-
-% if NumC == 3
-%     R=1;
-%     T=1;
-%     Xc=1;
-%     best_solution=1;
-%     Alph=1;
-%     Cw=1;
-%     Cc=1;
-% end
-% if NumC == 4
 %Compute M
 M=compute_M_ver2(U,Alph,A);
 %Compute kernel M
 [Km,vals,vv] =kernel_noise(M,4); %in matlab we have directly the funcion km=null(M);
+% M * Km
 %[allK, Se] = eigs(Me);
 %Kme = allK(:,1);
 
@@ -94,7 +72,7 @@ sol(1).T=T;
 sol(1).error=err(1);
 sol(1).scale = scale;
 
-sol(1).TC2W = MakeT(R,T);
+sol(1).TC2W = MakeTFromRTS(R,T);
 sol(1).beta = [beta1 beta2 beta3 beta4];
 
 %2.-Solve assuming dim(ker(M))=2------------------------------------------
@@ -121,7 +99,7 @@ sol(2).T=T;
 sol(2).error=err(2);
     sol(2).scale=scale2;
 
-sol(2).TC2W = MakeT(R,T);
+sol(2).TC2W = MakeTFromRTS(R,T);
 sol(2).beta = [beta1 beta2 beta3 beta4];
 
 %3.-Solve assuming dim(ker(M))=3------------------------------------------
@@ -221,52 +199,3 @@ sol(best_solution).EigVec = vv;
 sol(best_solution).EigVals= vals;
 Bestsol = sol(best_solution);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [R, T]=getrotT(wpts,cpts)
-  
-% This routine solves the exterior orientation problem for a point cloud
-%  given in both camera and world coordinates. 
-  
-% wpts = 3D points in arbitrary reference frame
-% cpts = 3D points in camera reference frame
-  
-n=size(wpts,1);
-M=zeros(3);
-
-ccent=mean(cpts);
-wcent=mean(wpts);
-
-for i=1:3
-  cpts(:,i)=cpts(:,i)-ccent(i)*ones(n,1);
-  wpts(:,i)=wpts(:,i)-wcent(i)*ones(n,1);
-end
-for i=1:n
-   M=M+cpts(i,:)'*wpts(i,:);
-end
-[U S V]=svd(M);
-R=U*V';
-if det(R)<0
-  R=-R;
-end
-T=ccent'-R*wcent';
-% 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [err,Urep]=reprojection_error_usingRT(Xw,U,R,T,A)
-
-%clear all; close all; load reprojection_error_usingRT;
-n=size(Xw,1);
-
-P=A*[R,T];
-Xw_h=[Xw,ones(n,1)];
-Urep_=(P*Xw_h')';
-
-%project reference points into the image plane
-Urep=zeros(n,2);
-Urep(:,1)=Urep_(:,1)./Urep_(:,3);
-Urep(:,2)=Urep_(:,2)./Urep_(:,3);
-
-%reprojection error
-err_=sqrt((U(:,1)-Urep(:,1)).^2+(U(:,2)-Urep(:,2)).^2);
-err=sum(err_)/n;
