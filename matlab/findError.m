@@ -1,11 +1,11 @@
-function [theVs, theVals, vt, st] = findError(camera, alpha, uv, NumC)
+function [theVs, theVals, vt, st] = findError(camera, alpha, uv, NumC, weights)
     n = size(alpha,1);
     uv = uv';
     NumUnk = NumC * 3;
     error = zeros(2,NumUnk);
     equation = zeros(NumUnk,NumUnk);
     for i =1:n
-        errorI = GetErrorI(camera,alpha(i,:),uv(:,i),NumC);
+        errorI = GetErrorI(camera,alpha(i,:),uv(:,i),NumC,weights(i));
         equation = equation + GetEquationI(camera,alpha(i,:),uv(:,i),errorI);
         error = error + errorI;
     end
@@ -71,7 +71,7 @@ function equationI = GetEquationI(fuv2,alphaI,uvI,errorI)
 %      end
 end
 
-function errorI = GetErrorI(fuv2,alphaI,uvI,NumC)
+function errorI = GetErrorI(fuv2,alphaI,uvI,NumC,WeightI)
      %The 12 unknowns are listed as [Cx1 Cx2 Cx3 Cx4 Cy1 Cy2 Cy3 Cy4 Cz1
      %Cz2 Cz3 Cz4]
      fu = fuv2(1,1);
@@ -89,6 +89,6 @@ function errorI = GetErrorI(fuv2,alphaI,uvI,NumC)
         errorU = [fuAlphaI 0 0 0 0 ucmuI];
         errorV = [0 0 0 0 fvAlphaI vcmvI];
      end         
-     errorI = [errorU; errorV];
+     errorI = WeightI*[errorU; errorV];
 end
      

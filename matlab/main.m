@@ -82,7 +82,8 @@ him(loop,:) = [Bestsol.error Bestsol.NumZeros Bang Bdist];
 
 %% My solution-------------------------------------------------
 %LJE added extra outputs making them available to mathematica
-[Mysol,alphas,vt,st]=efficient_pnpE(Xw,U,Camera,NumC,Bestsol.EigVec,Bestsol.beta,Bestsol.scale,Bestsol.NumZeros,TransCtoW);
+Weights = ones(NumPoints,1);
+[Mysol,alphas,vt,st]=efficient_pnpE(Xw,U,Camera,NumC,Weights,Bestsol.EigVec,Bestsol.beta,Bestsol.scale,Bestsol.NumZeros,TransCtoW);
 Xce = Mysol.Xc;
 Xwe = Mysol.Xw;
 Cce = Mysol.Cc;

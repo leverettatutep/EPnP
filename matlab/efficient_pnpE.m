@@ -1,4 +1,4 @@
-function [Solution,Alpha,vt,st] = efficient_pnpE(Xw,U,Camera,NumControlPts,...
+function [Solution,Alpha,vt,st] = efficient_pnpE(Xw,U,Camera,NumControlPts,Weights,...
     Km,hisbetasB,hisscale,hisnumzero,TC2W)
 
     
@@ -18,7 +18,7 @@ function [Solution,Alpha,vt,st] = efficient_pnpE(Xw,U,Camera,NumControlPts,...
     %Our method
     MaxSolutions = 4;
     Dw = FindDistancesBetweenPoints(Xw);
-    [EigVectors,EigVals,vt,st] =findError(Camera,Alpha,U,NumControlPts); 
+    [EigVectors,EigVals,vt,st] =findError(Camera,Alpha,U,NumControlPts,Weights); 
 %     EigVectors = -2 * EigVectors;
     Xc = zeros(numOfPoints,3,MaxSolutions);
     Cc = zeros(NumControlPts,3,MaxSolutions);
